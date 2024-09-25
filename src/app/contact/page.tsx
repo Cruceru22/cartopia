@@ -30,7 +30,7 @@ export default function ContactPage() {
     // Here you would typically send the form data to your backend
     console.log('Form submitted:', formData)
     toast.success('Message Sent!', {
-      description: "We'll get back to you as soon as possible.",
+      description: "We&apos;ll get back to you as soon as possible.",
     })
     setFormData({ name: '', email: '', subject: '', message: '' })
   }
@@ -55,7 +55,7 @@ export default function ContactPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Send us a message</CardTitle>
-                <CardDescription>We'd love to hear from you!</CardDescription>
+                <CardDescription>We&apos;d love to hear from you!</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">

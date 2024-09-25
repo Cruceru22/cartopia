@@ -20,7 +20,7 @@ import {
 } from "~/components/ui/card";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
-import { RedirectToSignIn, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
+import { RedirectToSignIn, SignedIn, SignedOut } from "@clerk/nextjs";
 
 interface CarModel {
   id: number;
@@ -44,7 +44,7 @@ const carModels: CarModel[] = [
   { id: 5, name: "BMW 3 Series" },
 ];
 
-const carSpecs: { [key: number]: CarSpec } = {
+const carSpecs: Record<number, CarSpec> = {
   1: {
     price: "$39,990",
     mpg: "142 MPGe",
@@ -185,8 +185,7 @@ export default function ComparePage() {
                             </TableHead>
                             {selectedCars.map((carId) => (
                               <TableHead key={carId}>
-                                {carModels.find((car) => car.id === carId)
-                                  ?.name || "Unknown"}
+                                {carModels.find((car) => car.id === carId)?.name ?? "Unknown"}
                               </TableHead>
                             ))}
                           </TableRow>
@@ -206,7 +205,7 @@ export default function ComparePage() {
                               </TableCell>
                               {selectedCars.map((carId) => (
                                 <TableCell key={carId}>
-                                  {carSpecs[carId]?.[spec] || "N/A"}
+                                  {carSpecs[carId]?.[spec] ?? "N/A"}
                                 </TableCell>
                               ))}
                             </TableRow>
