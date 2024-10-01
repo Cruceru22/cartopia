@@ -2,10 +2,6 @@ import axios from "axios";
 
 const API_BASE_URL = "https://carapi.app/api";
 
-interface AuthResponse {
-  token: string;
-}
-
 interface CarMake {
   id: number;
   name: string;
@@ -74,16 +70,16 @@ async function getJWT(apiToken: string, apiSecret: string): Promise<string> {
 
 async function apiGet<T>(
   endpoint: string,
-  params: Record<string, any> = {},
+  params: Record<string, string | number> = {},
 ): Promise<T> {
   const token = await getJWT(
-    process.env.CAR_API_TOKEN!,
-    process.env.CAR_API_SECRET!,
+    process.env.CAR_API_TOKEN ?? '',
+    process.env.CAR_API_SECRET ?? '',
   );
   const response = await axios.get<T>(`${API_BASE_URL}${endpoint}`, {
     headers: {
       Authorization: `Bearer ${token}`,
-      Accept: "application/jsaon",
+      Accept: "application/json",
     },
     params,
   });
@@ -93,23 +89,25 @@ async function apiGet<T>(
 export async function getCarMakes(): Promise<CarMakeResponse> {
   return apiGet<CarMakeResponse>("/makes");
 }
+
 export async function getCarModels(
   makeId: number,
   year: number,
 ): Promise<CarModelResponse> {
-  const params: Record<string, any> = {
+  const params: Record<string, string | number> = {
     make_id: makeId,
     verbose: "yes",
     year: year,
   };
   return apiGet<CarModelResponse>("/models", params);
 }
+
 export async function getCarTrims(
   model_id: number,
   year: number,
   make_id: number,
 ): Promise<CarTrimResponse> {
-  const params: Record<string, any> = {
+  const params: Record<string, string | number> = {
     model_id: model_id,
     year: year,
     verbose: "yes",
@@ -128,22 +126,16 @@ export async function getCarTrims(
 
 export async function getEngineDetails(trimId: number): Promise<EngineResponse> {
   try {
-    console.log(`Fetching engine details for trim ID: ${trimId}`);
-    
     const response = await apiGet<EngineResponse>(`/engines?make_model_trim_id=${trimId}`);
-    
-    console.log("API response:", JSON.stringify(response, null, 2));
 
     if (response.data.length === 0) {
-      console.log(`No engine found for trim ID: ${trimId}`);
+      console.warn(`No engine details found for trimId: ${trimId}`);
     } else if (response.data.length > 1) {
-      console.log(`Multiple engines found for trim ID: ${trimId}. Count: ${response.data.length}`);
+      console.warn(`Multiple engine details found for trimId: ${trimId}`);
     }
-
-    return response; // We're returning the whole response as it should already be filtered by the API
-
+    return response;
   } catch (error) {
-    console.error(`Error fetching engine details for trim ID ${trimId}:`, error);
+    console.error(`Error fetching engine details for trimId: ${trimId}`, error);
     throw error;
   }
 }

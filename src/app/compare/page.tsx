@@ -30,6 +30,14 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 
 interface Engine {
@@ -70,14 +78,14 @@ export default function ComparePage() {
 
   // Queries for car 1
   const { data: engine1 } = api.cars.engine.useQuery<Engine[]>(
-    { trimId: carSelections[0].trimId! },
+    { trimId: carSelections[0].trimId ?? 0 },
     { enabled: carSelections[0].trimId !== null },
   );
   const { data: trims1 } = api.cars.trims.useQuery(
     {
-      modelId: carSelections[0].modelId!,
-      year: carSelections[0].year!,
-      make_id: carSelections[0].makeId!,
+      modelId: carSelections[0].modelId ?? 0,
+      year: carSelections[0].year ?? 0,
+      make_id: carSelections[0].makeId ?? 0,
     },
     {
       enabled:
@@ -89,14 +97,14 @@ export default function ComparePage() {
 
   // Queries for car 2
   const { data: engine2 } = api.cars.engine.useQuery<Engine[]>(
-    { trimId: carSelections[1].trimId! },
+    { trimId: carSelections[1].trimId ?? 0 },
     { enabled: carSelections[1].trimId !== null },
   );
   const { data: trims2 } = api.cars.trims.useQuery(
     {
-      modelId: carSelections[1].modelId!,
-      year: carSelections[1].year!,
-      make_id: carSelections[1].makeId!,
+      modelId: carSelections[1].modelId ?? 0,
+      year: carSelections[1].year ?? 0,
+      make_id: carSelections[1].makeId ?? 0,
     },
     {
       enabled:
@@ -136,39 +144,39 @@ export default function ComparePage() {
 
   const renderCarSelector = (index: number) => {
     const selection = carSelections[index];
+    if (!selection) return null;
+  
     const { data: models, isLoading: isLoadingModels } =
       api.cars.models.useQuery(
-        { make_id: selection?.makeId!, year: selection?.year! },
-        { enabled: selection?.makeId !== null && selection?.year !== null },
+        { make_id: selection.makeId ?? 0, year: selection.year ?? 0 },
+        { enabled: selection.makeId !== null && selection.year !== null },
       );
     const { data: trims, isLoading: isLoadingTrims } = api.cars.trims.useQuery(
       {
-        modelId: selection?.modelId!,
-        year: selection?.year!,
-        make_id: selection?.makeId!,
+        modelId: selection.modelId ?? 0,
+        year: selection.year ?? 0,
+        make_id: selection.makeId ?? 0,
       },
-      { enabled: selection?.modelId !== null && selection?.year !== null },
+      { enabled: selection.modelId !== null && selection.year !== null },
     );
-
+  
     return (
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">
-            Select Car {index + 1}
+            Car {index + 1}
           </CardTitle>
-          <CardDescription>
-            Choose a make, year, model, and trim
-          </CardDescription>
+          <CardDescription>Select your car details</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col gap-4">
             <Select
               onValueChange={(value) =>
                 handleSelectionChange(index, "makeId", Number(value))
               }
-              value={selection?.makeId?.toString()}
+              value={selection.makeId?.toString()}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger>
                 <SelectValue placeholder="Select Make" />
               </SelectTrigger>
               <SelectContent>
@@ -185,15 +193,15 @@ export default function ComparePage() {
                 )}
               </SelectContent>
             </Select>
-
+  
             <Select
               onValueChange={(value) =>
                 handleSelectionChange(index, "year", Number(value))
               }
-              value={selection?.year?.toString()}
-              disabled={!selection?.makeId}
+              value={selection.year?.toString()}
+              disabled={selection.makeId === null}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger>
                 <SelectValue placeholder="Select Year" />
               </SelectTrigger>
               <SelectContent>
@@ -204,15 +212,15 @@ export default function ComparePage() {
                 ))}
               </SelectContent>
             </Select>
-
+  
             <Select
               onValueChange={(value) =>
                 handleSelectionChange(index, "modelId", Number(value))
               }
-              value={selection?.modelId?.toString()}
-              disabled={!selection?.makeId || !selection.year}
+              value={selection.modelId?.toString()}
+              disabled={selection.makeId === null || selection.year === null}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger>
                 <SelectValue placeholder="Select Model" />
               </SelectTrigger>
               <SelectContent>
@@ -229,15 +237,15 @@ export default function ComparePage() {
                 )}
               </SelectContent>
             </Select>
-
+  
             <Select
               onValueChange={(value) =>
                 handleSelectionChange(index, "trimId", Number(value))
               }
-              value={selection?.trimId?.toString()}
-              disabled={!selection?.modelId}
+              value={selection.trimId?.toString()}
+              disabled={selection.modelId === null}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger>
                 <SelectValue placeholder="Select Trim" />
               </SelectTrigger>
               <SelectContent>
@@ -259,33 +267,36 @@ export default function ComparePage() {
       </Card>
     );
   };
-
+  
   const renderCarDetails = (index: number) => {
     const selection = carSelections[index];
+    if (!selection) return null;
+  
     const { data: engine, isLoading: isLoadingEngineDetails } =
       api.cars.engine.useQuery<Engine[]>(
-        { trimId: selection?.trimId! },
-        { enabled: selection?.trimId !== null },
+        { trimId: selection.trimId ?? 0 },
+        { enabled: selection.trimId !== null },
       );
     const { data: trims } = api.cars.trims.useQuery(
       {
-        modelId: selection?.modelId!,
-        year: selection?.year!,
-        make_id: selection?.makeId!,
+        modelId: selection.modelId ?? 0,
+        year: selection.year ?? 0,
+        make_id: selection.makeId ?? 0,
       },
-      { enabled: selection?.modelId !== null && selection?.year !== null },
+      { enabled: selection.modelId !== null && selection.year !== null },
     );
     const { data: models } = api.cars.models.useQuery(
-      { make_id: selection?.makeId!, year: selection?.year! },
-      { enabled: selection?.makeId !== null && selection?.year !== null },
+      { make_id: selection.makeId ?? 0, year: selection.year ?? 0 },
+      { enabled: selection.makeId !== null && selection.year !== null },
     );
-
-    if (!selection?.trimId) return null;
-
+  
+    if (selection.trimId === null) return null;
+  
     const selectedModel = models?.find(
       (model) => model.id === selection.modelId,
     );
-
+    const selectedTrim = trims?.find((trim) => trim.id === selection.trimId);
+  
     return (
       <Card>
         <CardHeader>
@@ -294,58 +305,57 @@ export default function ComparePage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p>
-            Make: {makes?.find((make) => make.id === selection.makeId)?.name}
-          </p>
-          <p>Year: {selection.year}</p>
-          <p>Model: {selectedModel?.name}</p>
-          <p>
-            Trim: {trims?.find((trim) => trim.id === selection.trimId)?.name}
-          </p>
-          <p>
-            Description:{" "}
-            {trims?.find((trim) => trim.id === selection.trimId)?.description}
-          </p>
-          <p>
-            MSRP: $
-            {trims
-              ?.find((trim) => trim.id === selection.trimId)
-              ?.msrp.toLocaleString()}
-          </p>
-          <p>
-            Invoice: $
-            {trims
-              ?.find((trim) => trim.id === selection.trimId)
-              ?.invoice.toLocaleString()}
-          </p>
-
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="font-semibold">Basic Info</h3>
+              <p>Make: {makes?.find((make) => make.id === selection.makeId)?.name}</p>
+              <p>Year: {selection.year}</p>
+              <p>Model: {selectedModel?.name}</p>
+              <p>Trim: {selectedTrim?.name}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold">Pricing</h3>
+              <p>MSRP: ${selectedTrim?.msrp.toLocaleString()}</p>
+              <p>Invoice: ${selectedTrim?.invoice.toLocaleString()}</p>
+            </div>
+          </div>
+          <div className="mt-4">
+            <h3 className="font-semibold">Description</h3>
+            <p>{selectedTrim?.description}</p>
+          </div>
           {isLoadingEngineDetails ? (
             <p>Loading engine details...</p>
           ) : engine ? (
-            <>
-              <h3 className="mt-4 text-xl font-semibold">Engine Details</h3>
-              <p>Engine Type: {engine[0]?.engine_type ?? "N/A"}</p>
-              <p>Fuel Type: {engine[0]?.fuel_type ?? "N/A"}</p>
-              <p>Cylinders: {engine[0]?.cylinders ?? "N/A"}</p>
-              <p>Size: {engine[0]?.size ?? "N/A"}</p>
-              <p>
-                Horsepower:{" "}
-                {engine[0]?.horsepower_hp && engine[0]?.horsepower_rpm
-                  ? `${engine[0].horsepower_hp} hp @ ${engine[0].horsepower_rpm} rpm`
-                  : "N/A"}
-              </p>
-              <p>
-                Torque:{" "}
-                {engine[0]?.torque_ft_lbs && engine[0]?.torque_rpm
-                  ? `${engine[0].torque_ft_lbs} ft-lbs @ ${engine[0].torque_rpm} rpm`
-                  : "N/A"}
-              </p>
-              <p>Valves: {engine[0]?.valves ?? "N/A"}</p>
-              <p>Valve Timing: {engine[0]?.valve_timing ?? "N/A"}</p>
-              <p>Cam Type: {engine[0]?.cam_type ?? "N/A"}</p>
-              <p>Drive Type: {engine[0]?.drive_type ?? "N/A"}</p>
-              <p>Transmission: {engine[0]?.transmission ?? "N/A"}</p>
-            </>
+            <div className="mt-4">
+              <h3 className="font-semibold">Engine Details</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p>Engine Type: {engine[0]?.engine_type ?? "N/A"}</p>
+                  <p>Fuel Type: {engine[0]?.fuel_type ?? "N/A"}</p>
+                  <p>Cylinders: {engine[0]?.cylinders ?? "N/A"}</p>
+                  <p>Size: {engine[0]?.size ?? "N/A"}</p>
+                  <p>Valves: {engine[0]?.valves ?? "N/A"}</p>
+                </div>
+                <div>
+                  <p>
+                    Horsepower:{" "}
+                    {engine[0]?.horsepower_hp && engine[0]?.horsepower_rpm
+                      ? `${engine[0].horsepower_hp} hp @ ${engine[0].horsepower_rpm} rpm`
+                      : "N/A"}
+                  </p>
+                  <p>
+                    Torque:{" "}
+                    {engine[0]?.torque_ft_lbs && engine[0]?.torque_rpm
+                      ? `${engine[0].torque_ft_lbs} ft-lbs @ ${engine[0].torque_rpm} rpm`
+                      : "N/A"}
+                  </p>
+                  <p>Valve Timing: {engine[0]?.valve_timing ?? "N/A"}</p>
+                  <p>Cam Type: {engine[0]?.cam_type ?? "N/A"}</p>
+                  <p>Drive Type: {engine[0]?.drive_type ?? "N/A"}</p>
+                  <p>Transmission: {engine[0]?.transmission ?? "N/A"}</p>
+                </div>
+              </div>
+            </div>
           ) : (
             <p>No engine details available</p>
           )}
@@ -356,108 +366,173 @@ export default function ComparePage() {
 
   const renderComparisonCharts = () => {
     if (!engine1 || !engine2 || !trims1 || !trims2) return null;
-
+  
     const trim1 = trims1.find((trim) => trim.id === carSelections[0].trimId);
     const trim2 = trims2.find((trim) => trim.id === carSelections[1].trimId);
-
+  
     if (!trim1 || !trim2) return null;
-
+  
     const engineData = [
       {
-        name: "Horsepower",
-        Car1: engine1[0]?.horsepower_hp,
-        Car2: engine2[0]?.horsepower_hp,
+        attribute: "Horsepower",
+        Car1: engine1[0]?.horsepower_hp ?? 0,
+        Car2: engine2[0]?.horsepower_hp ?? 0,
       },
       {
-        name: "Torque",
-        Car1: engine1[0]?.torque_ft_lbs,
-        Car2: engine2[0]?.torque_ft_lbs,
+        attribute: "Torque",
+        Car1: engine1[0]?.torque_ft_lbs ?? 0,
+        Car2: engine2[0]?.torque_ft_lbs ?? 0,
+      },
+      {
+        attribute: "Engine Size",
+        Car1: parseFloat(engine1[0]?.size ?? "0"),
+        Car2: parseFloat(engine2[0]?.size ?? "0"),
+      },
+      {
+        attribute: "Cylinders",
+        Car1: parseInt(engine1[0]?.cylinders ?? "0", 10),
+        Car2: parseInt(engine2[0]?.cylinders ?? "0", 10),
       },
     ];
-
+  
     const priceData = [
       { name: "MSRP", Car1: trim1.msrp, Car2: trim2.msrp },
       { name: "Invoice", Car1: trim1.invoice, Car2: trim2.invoice },
     ];
-
-    return (
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle className="text-2xl font-semibold">
-            Comparison Charts
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <h3 className="mb-4 text-xl font-semibold">Engine Comparison</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={engineData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="Car1" fill="#8884d8" />
-              <Bar dataKey="Car2" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-
-          <h3 className="mb-4 mt-8 text-xl font-semibold">Price Comparison</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={priceData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="Car1" fill="#8884d8" />
-              <Bar dataKey="Car2" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  return (
-    <>
-      <SignedIn>
-        <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white">
-          <div className="container mx-auto px-4 py-8">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="mb-8 flex items-center justify-between"
-            >
-              <Link href="/">
-                <Button variant="ghost" className="flex items-center">
-                  <ChevronLeft className="mr-2" size={24} />
-                  Back to Home
-                </Button>
-              </Link>
-              <h1 className="flex items-center text-3xl font-bold text-blue-600">
-                <Car className="mr-2" size={32} />
-                Cartopia
-              </h1>
-            </motion.div>
-
-            {renderCarSelector(0)}
-            {renderCarSelector(1)}
-
-            <div className="m d:grid-cols-2 grid grid-cols-1 gap-8">
-              {renderCarDetails(0)}
-              {renderCarDetails(1)}
+  
+    const valveData = [
+        { name: "Car 1", value: engine1[0]?.valves ?? 0 },
+        { name: "Car 2", value: engine2[0]?.valves ?? 0 },
+      ];
+    
+      const engineSizeData = [
+        { name: "Car 1", value: parseFloat(engine1[0]?.size ?? "0") },
+        { name: "Car 2", value: parseFloat(engine2[0]?.size ?? "0") },
+      ];
+    
+      const COLORS = ["#8884d8", "#82ca9d"];
+    
+      return (
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="text-2xl font-semibold">
+              Comparison Charts
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+              <div>
+                <h3 className="mb-4 text-xl font-semibold">Engine Comparison</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <RadarChart data={engineData}>
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey="attribute" />
+                    <PolarRadiusAxis angle={30} domain={[0, 'auto']} />
+                    <Radar name="Car 1" dataKey="Car1" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                    <Radar name="Car 2" dataKey="Car2" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
+                    <Legend />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+              <div>
+                <h3 className="mb-4 text-xl font-semibold">Price Comparison</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={priceData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="Car1" fill="#8884d8" />
+                    <Bar dataKey="Car2" fill="#82ca9d" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div>
+                <h3 className="mb-4 text-xl font-semibold">Valve Comparison</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={valveData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {valveData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div>
+                <h3 className="mb-4 text-xl font-semibold">Engine Size Comparison</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={engineSizeData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="value" fill="#82ca9d" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-
-            {carSelections[0].trimId &&
-              carSelections[1].trimId &&
-              renderComparisonCharts()}
+          </CardContent>
+        </Card>
+      );
+    };
+  
+    return (
+      <>
+        <SignedIn>
+          <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white">
+            <div className="container mx-auto px-4 py-8">
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="mb-8 flex items-center justify-between"
+              >
+                <Link href="/">
+                  <Button variant="ghost" className="flex items-center">
+                    <ChevronLeft className="mr-2" size={24} />
+                    Back to Home
+                  </Button>
+                </Link>
+                <h1 className="flex items-center text-3xl font-bold text-blue-600">
+                  <Car className="mr-2" size={32} />
+                  Cartopia Comparison
+                </h1>
+              </motion.div>
+  
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                {renderCarSelector(0)}
+                {renderCarSelector(1)}
+              </div>
+  
+              <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
+                {renderCarDetails(0)}
+                {renderCarDetails(1)}
+              </div>
+  
+              {carSelections[0].trimId !== null &&
+                carSelections[1].trimId !== null &&
+                renderComparisonCharts()}
+  
+            </div>
           </div>
-        </div>
-      </SignedIn>
-      <SignedOut>
-        <RedirectToSignIn />
-      </SignedOut>
-    </>
-  );
-}
+        </SignedIn>
+        <SignedOut>
+          <RedirectToSignIn />
+        </SignedOut>
+      </>
+    );
+  }
