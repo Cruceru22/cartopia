@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, Car } from "lucide-react";
+import { Car } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -10,8 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import Link from "next/link";
-import { Button } from "~/components/ui/button";
 import { RedirectToSignIn, SignedIn, SignedOut } from "@clerk/nextjs";
 import {
   Select,
@@ -501,13 +499,8 @@ export default function ComparePage() {
                 transition={{ duration: 0.5 }}
                 className="mb-8 flex items-center justify-between"
               >
-                <Link href="/">
-                  <Button variant="ghost" className="flex items-center">
-                    <ChevronLeft className="mr-2" size={24} />
-                    Back to Home
-                  </Button>
-                </Link>
-                <h1 className="flex items-center text-3xl font-bold text-blue-600">
+                
+                <h1 className="flex text-3xl font-bold text-blue-600 justify-center">
                   <Car className="mr-2" size={32} />
                   Cartopia Comparison
                 </h1>
